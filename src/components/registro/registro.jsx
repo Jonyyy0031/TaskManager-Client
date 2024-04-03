@@ -50,6 +50,12 @@ function Registro() {
     } catch (error) {
       if (error.response && error.response.status === 400) {
         setError("El nombre de usuario ya está en uso");
+      }
+      if (
+        error.response.data.error === "El correo electronico ya esta en uso" &&
+        error.response.status === 400
+      ) {
+        setError("El correo electronico ya esta en uso");
       } else {
         setError(
           "Error en el servidor. Por favor, inténtalo de nuevo más tarde."
@@ -188,7 +194,7 @@ function Registro() {
                 <div className="flex flex-col">
                   <button
                     type="submit"
-                    className="flex w-full border border-black items-center justify-center active:scale-[.98] active:duration-75 transition-all hover:scale-[1.01] font-bold  rounded-xl bg-orange-500  p-3 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    className="flex w-full border border-black items-center justify-center active:scale-[.98] active:duration-75 transition-all hover:scale-[1.01] font-bold  rounded-xl bg-orange-500  p-3 text-sm  leading-6 text-white shadow-sm hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
                     Create an account
                   </button>
@@ -197,7 +203,7 @@ function Registro() {
                   </p>
                   <button
                     type="button"
-                    className=" bg-white border border-black flex items-center p-3 gap-3 mt-2 justify-center active:scale-[.98] active:duration-75 transition-all hover:scale-[1.01] font-bold  rounded-xl text-sm font-semibold leading-6 "
+                    className=" bg-white border border-black flex items-center p-3 gap-3 mt-2 justify-center active:scale-[.98] active:duration-75 transition-all hover:scale-[1.01]  rounded-xl text-sm font-semibold leading-6 "
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

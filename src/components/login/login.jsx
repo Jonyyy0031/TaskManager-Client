@@ -55,8 +55,14 @@ function Login() {
         }
       }
     } catch (error) {
+      if (error.response.status === 500)
+      {
+        setError("Error de servidor")
+      }
+      else{
       console.error("Error de inicio de sesión:", error.response.data.error);
       setError("Credenciales incorrectas")
+      }
     }
   };
 
@@ -137,14 +143,14 @@ function Login() {
                 <div className="flex flex-col">
                   <button
                     type="submit"
-                    className="flex w-full justify-center active:scale-[.98] active:duration-75 transition-all hover:scale-[1.01] font-bold  rounded-xl bg-indigo-600  py-3 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    className="flex w-full justify-center active:scale-[.98] active:duration-75 transition-all hover:scale-[1.01]  rounded-xl bg-indigo-600  py-3 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
                     Sign in
                   </button>
                   {error && <span className="text-red-500">{error}</span>}
                   <button
                     type="button"
-                    className="flex items-center py-3 gap-3 mt-2 justify-center active:scale-[.98] active:duration-75 transition-all hover:scale-[1.01] font-bold  rounded-xl   py-3 text-sm font-semibold leading-6 "
+                    className="flex items-center gap-3 mt-2 justify-center active:scale-[.98] active:duration-75 transition-all hover:scale-[1.01]  rounded-xl   py-3 text-sm font-semibold leading-6 "
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
