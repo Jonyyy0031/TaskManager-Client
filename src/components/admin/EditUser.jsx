@@ -1,5 +1,5 @@
 import React, { Fragment, useState, useEffect } from "react";
-import PropTypes from "prop-types"
+import PropTypes from "prop-types";
 import ClienteAxios from "../../config/axios";
 import {
   Button,
@@ -15,20 +15,48 @@ import {
 } from "@material-tailwind/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
-function New({onUserAdded}) {
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen((cur) => !cur);
+function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
+  const [open, setOpen] = useState(true);
+  const handleClose = () => {
+    setOpen(false);
+    handleCloseEdit();
+  };
 
-  const [roles, guardarroles] = useState([]);
+  const [roles, saveroles] = useState([]);
   useEffect(() => {
     ClienteAxios.get("/roles")
       .then((response) => {
-        guardarroles(response.data);
+        saveroles(response.data);
       })
       .catch((error) => {
         console.error("Error al obtener los roles:", error);
       });
   }, []);
+
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const handleChange = (e, name) => {
+    const value = e.target ? e.target.value : e;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await ClienteAxios.get(`/usuarios/${usuarioID}`);
+        const userData = response.data;
+        setFormData({
+          username: userData.Username,
+          email: userData.Email,
+        });
+      } catch (error) {
+        console.error("Error al obtener datos del usuario:", error);
+        setError("Error al obtener datos del usuario");
+      }
+    };
+
+    fetchUserData();
+  }, [usuarioID]);
 
   const [formData, setFormData] = useState({
     ID_Rol: "",
@@ -37,13 +65,6 @@ function New({onUserAdded}) {
     password: "",
     confirmpassword: "",
   });
-  console.log(formData);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const handleChange = (e, name) => {
-    const value = e.target ? e.target.value : e;
-    setFormData({ ...formData, [name]: value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,33 +75,36 @@ function New({onUserAdded}) {
     }
 
     try {
-      const response = await ClienteAxios.post("/usuarios", {
+      const response = await ClienteAxios.patch(`/usuarios/${usuarioID}`, {
         ID_Rol: formData.ID_Rol,
         username: formData.username,
         email: formData.email,
         password: formData.password,
       });
       if (response.status === 201) {
-        setSuccessMessage("Usuario creado correctamente");
+        setSuccessMessage("Usuario editado correctamente");
         setError("");
-        setFormData({
-          ID_Rol: "",
-          username: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
-        onUserAdded();
+        onUserEdited();
         setTimeout(() => {
-          setOpen(false);
+          handleClose();
+          setFormData({
+            ID_Rol: "",
+            username: "",
+            email: "",
+            password: "",
+            confirmPassword: "",
+          });
           setSuccessMessage("");
-        }, 3500); 
+        }, 3500);
       }
     } catch (error) {
-      if (error.response.data.error === "El nombre de usuario ya esta en uso" && error.response.status === 400) {
-        setError("El nombre de usuario ya está en uso");
-      }
+      console.log(error.response.data.error);
       if (
+        error.response.data.error === "El nombre de usuario ya esta en uso" &&
+        error.response.status === 400
+      ) {
+        setError("El nombre de usuario ya está en uso");
+      } else if (
         error.response.data.error === "El correo electronico ya esta en uso" &&
         error.response.status === 400
       ) {
@@ -95,25 +119,18 @@ function New({onUserAdded}) {
       }, 3000);
     }
   };
-
   return (
     <Fragment>
-      <Button onClick={handleOpen}>Nuevo usuario</Button>
-      <Dialog
-        size="xs"
-        open={open}
-        handler={handleOpen}
-        className="bg-transparent shadow-none"
-      >
+      <Dialog size="xs" open={open} className="bg-transparent shadow-none">
         <Card className="mx-auto w-full max-w-[24rem]">
           <form onSubmit={handleSubmit}>
             <CardBody className="flex flex-col gap-4">
               <div className="flex justify-between items-center space-x-4">
                 <Typography variant="h4" color="blue-gray">
-                  Create a new user
+                  Edit User
                 </Typography>
                 <div className="flex items-center">
-                  <IconButton variant="text" size="sm" onClick={handleOpen}>
+                  <IconButton variant="text" size="sm" onClick={handleClose}>
                     <XMarkIcon className="h-8 w-8 stroke-2"></XMarkIcon>
                   </IconButton>
                 </div>
@@ -139,9 +156,8 @@ function New({onUserAdded}) {
                 Rol
               </Typography>
               <Select
-                color="blue"
+                color="red"
                 label="Select Rol"
-                required
                 value={formData.ID_Rol}
                 onChange={(e) => handleChange(e, "ID_Rol")}
               >
@@ -183,7 +199,7 @@ function New({onUserAdded}) {
                     value={formData.password}
                     onChange={(e) => handleChange(e, "password")}
                     placeholder="••••••••"
-                    className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:border-black dark:placeholder-black-50 dark:text-black"
+                    className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 border-black border-opacity-20 placeholder-black-50 text-black"
                     required
                   />
                 </div>
@@ -197,7 +213,7 @@ function New({onUserAdded}) {
                     value={formData.confirmpassword}
                     onChange={(e) => handleChange(e, "confirmpassword")}
                     placeholder="••••••••"
-                    className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:border-black dark:placeholder-black-50 dark:text-black"
+                    className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 border-black border-opacity-20 placeholder-black-50 text-black"
                     required
                   />
                 </div>
@@ -207,7 +223,7 @@ function New({onUserAdded}) {
               {error && <span className="text-red-500">{error}</span>}
               <div className="flex flex-col mt-2">
                 <Button variant="gradient" type="submit" fullWidth>
-                  Create account
+                  Edit account
                 </Button>
               </div>
             </CardFooter>
@@ -217,7 +233,9 @@ function New({onUserAdded}) {
     </Fragment>
   );
 }
-New.propTypes = {
-    onUserAdded: PropTypes.func.isRequired, 
-  };
-export default New;
+EditUser.propTypes = {
+  usuarioID: PropTypes.number.isRequired,
+  handleCloseEdit: PropTypes.func.isRequired,
+  onUserEdited: PropTypes.func.isRequired,
+};
+export default EditUser;

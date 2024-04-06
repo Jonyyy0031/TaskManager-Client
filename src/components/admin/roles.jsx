@@ -1,7 +1,6 @@
-// eslint-disable-next-line no-unused-vars
 import React, { Fragment, useEffect, useState } from "react";
-import EditUser from "./EditUser";
-import AddUser from "./AddUser";
+import AddRol from "./AddRol";
+import EditRol from "./EditRol";
 import Sidebaradmin from "./sidebaradmin";
 import Footer from "../layout/Footer";
 import ClienteAxios from "../../config/axios";
@@ -18,7 +17,6 @@ import {
   Tabs,
   TabsHeader,
   Tab,
-  Avatar,
   IconButton,
   Tooltip,
   Dialog,
@@ -33,60 +31,55 @@ const TABS = [
     value: "all",
   },
 ];
-const TABLE_HEAD = ["Usuario", "Rol", "Fecha", "Acciones"];
 
-function Homea() {
-  const [usuarios, setUsuarios] = useState([]);
+const TABLE_HEAD = ["Rol", "Nombre", "Acciones"];
+
+function Roles() {
+  const [roles, setRoles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage] = useState(10);
-  const [usuarioID, setUsuarioID] = useState(null);
+  const [rolID, setRolID] = useState(null);
 
-  const filteredUsuarios = usuarios.filter((usuario) =>
-    usuario.Username.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRoles = roles.filter((rol) =>
+    rol.Nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  const indexOfLastUsuario = currentPage * perPage;
-  const indexOfFirstUsuario = indexOfLastUsuario - perPage;
-  const currentUsuarios = filteredUsuarios.slice(
-    indexOfFirstUsuario,
-    indexOfLastUsuario
-  );
+  const indexOfLastRol = currentPage * perPage;
+  const indexOfFirstRol = indexOfLastRol - perPage;
+  const currentRoles = filteredRoles.slice(indexOfFirstRol, indexOfLastRol);
 
   const handlePreviousPage = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
   const handleNextPage = () => {
-    if (indexOfLastUsuario < filteredUsuarios.length) {
+    if (indexOfLastRol < filteredRoles.length) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
 
-  function fetchUsuarios() {
-    ClienteAxios.get("/usuarios")
+  function fetchRoles() {
+    ClienteAxios.get("/roles")
       .then((response) => {
-        setUsuarios(response.data);
+        setRoles(response.data);
       })
       .catch((error) => {
-        console.error("Error al obtener los datos de los usuarios:", error);
+        console.error("Error al obtener los datos de los roles:", error);
       });
   }
 
   useEffect(() => {
-    fetchUsuarios();
+    fetchRoles();
   }, []);
 
-  const deleteUsuario = async (ID_Usuario) => {
+  const deleteRol = async (ID_Rol) => {
     try {
-      const response = await ClienteAxios.delete(
-        "/usuarios/" + ID_Usuario + ""
-      );
-      console.log(ID_Usuario);
+      const response = await ClienteAxios.delete("/roles/" + ID_Rol + "");
       console.log(response);
       setOpen(!open);
-      fetchUsuarios();
+      fetchRoles();
     } catch (error) {
-      console.error("Error al eliminar el usuario: ", error);
+      console.error("Error al eliminar el rol: ", error);
     }
   };
 
@@ -94,39 +87,38 @@ function Homea() {
   const handleOpen = () => setOpen(!open);
 
   const [editMode, setEditMode] = useState(false);
-  const [selectedUserID, setSelectedUserID] = useState(null);
-  const handleEditClick = (userID) => {
+  const [selectedRolID, setSelectedRolID] = useState(null);
+  const handleEditClick = (rolID) => {
     setEditMode(true);
-    setSelectedUserID(userID);
+    setSelectedRolID(rolID);
   };
 
   const handleCloseEdit = () => {
     setEditMode(false);
   };
-
   return (
     <Fragment>
       <Sidebaradmin />
       {editMode && (
-        <EditUser
-          usuarioID={selectedUserID}
-          onUserEdited={fetchUsuarios}
-          handleCloseEdit={handleCloseEdit}
-        />
-      )}
+          <EditRol
+            rolID={selectedRolID}
+            onRolEdited={fetchRoles}
+            handleCloseEdit={handleCloseEdit}
+          />
+        )}
       <Card className="block h-full w-full max-w-screen-2xl mx-auto rounded-2xl mt-4 mb-4 p-2 lg:rounded-3xl lg:pl-3">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-8 flex items-center justify-between gap-8">
             <div>
               <Typography variant="h5" color="blue-gray">
-                Usuarios
+                Roles
               </Typography>
               <Typography color="gray" className="mt-1 font-normal">
-                Informacion acerca de todos los usuarios registrados
+                Informacion acerca de todos los roles existentes
               </Typography>
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-              <AddUser onUserAdded={fetchUsuarios} />
+              <AddRol onRolAdded={fetchRoles} />
             </div>
           </div>
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
@@ -170,70 +162,54 @@ function Homea() {
               </tr>
             </thead>
             <tbody>
-              {currentUsuarios.map((usuario, index) => {
-                const isLast = index === filteredUsuarios.length - 1;
+              {currentRoles.map((rol, index) => {
+                const isLast = index === filteredRoles.length - 1;
                 const classes = isLast
                   ? "p-4"
                   : "p-4 border-b border-blue-gray-50";
 
                 return (
-                  <tr key={usuario.ID_Usuario}>
+                  <tr key={rol.ID_Rol}>
                     <td className={classes}>
                       <div className="flex items-center gap-3">
-                        <Avatar src="" size="sm" />
                         <div className="flex flex-col">
                           <Typography
                             variant="small"
                             color="blue-gray"
                             className="font-normal"
                           >
-                            {usuario.Username}
-                          </Typography>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal opacity-70"
-                          >
-                            {usuario.Email}
+                            {rol.ID_Rol}
                           </Typography>
                         </div>
                       </div>
                     </td>
                     <td className={classes}>
-                      <div className="flex flex-col">
-                        <Typography
-                          variant="small"
-                          color="blue-gray"
-                          className="font-normal"
-                        >
-                          {usuario.ID_Rol}
-                        </Typography>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal"
+                          >
+                            {rol.Nombre}
+                          </Typography>
+                        </div>
                       </div>
                     </td>
                     <td className={classes}>
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {usuario.Fechareg.slice(0, 10)}
-                      </Typography>
-                    </td>
-                    <td className={classes}>
-                      <Tooltip content="Edit User">
+                      <Tooltip content="Edit Rol">
                         <IconButton
                           variant="text"
-                          onClick={() => handleEditClick(usuario.ID_Usuario)}
+                          onClick={() => handleEditClick(rol.ID_Rol)}
                         >
                           <PencilIcon className="h-4 w-4"></PencilIcon>
                         </IconButton>
                       </Tooltip>
-                      <Tooltip content="Delete User">
-                        {/* <IconButton variant="text" onClick={() => deleteUsuario(usuario.ID_Usuario)}> */}
+                      <Tooltip content="Delete Rol">
                         <IconButton
                           variant="text"
                           onClick={() => {
-                            setUsuarioID(usuario.ID_Usuario);
+                            setRolID(rol.ID_Rol);
                             handleOpen();
                           }}
                         >
@@ -249,8 +225,7 @@ function Homea() {
         </CardBody>
         <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
           <Typography variant="small" color="blue-gray" className="font-normal">
-            Pagina {currentPage} de{" "}
-            {Math.ceil(filteredUsuarios.length / perPage)}
+            Pagina {currentPage} de {Math.ceil(filteredRoles.length / perPage)}
           </Typography>
           <div className="flex gap-2">
             <Button variant="outlined" size="sm" onClick={handlePreviousPage}>
@@ -260,7 +235,7 @@ function Homea() {
               variant="outlined"
               size="sm"
               onClick={handleNextPage}
-              disabled={indexOfLastUsuario >= filteredUsuarios.length}
+              disabled={indexOfLastRol >= filteredRoles.length}
             >
               Siguiente
             </Button>
@@ -291,7 +266,7 @@ function Homea() {
             />
           </svg>
           <Typography color="red" variant="h4">
-            Estas apunto de eliminar un usuario!
+            Estas apunto de eliminar un Rol!
           </Typography>
           <Typography className="text-center font-normal">
             Esta accion es irreversible!
@@ -301,7 +276,7 @@ function Homea() {
           <Button variant="text" color="blue-gray" onClick={handleOpen}>
             Cancel
           </Button>
-          <Button color="red" onClick={() => deleteUsuario(usuarioID)}>
+          <Button color="red" onClick={() => deleteRol(rolID)}>
             Lo entiendo y quiero continuar
           </Button>
         </DialogFooter>
@@ -310,4 +285,4 @@ function Homea() {
   );
 }
 
-export default Homea;
+export default Roles;

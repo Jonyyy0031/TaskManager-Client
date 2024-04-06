@@ -19,7 +19,6 @@ import {
 } from "@material-tailwind/react";
 import {
   PresentationChartBarIcon,
-  ShoppingBagIcon,
   UserCircleIcon,
   Cog6ToothIcon,
   InboxIcon,
@@ -191,15 +190,9 @@ function Sidebaradmin() {
             </ListItem>
             <ListItem>
               <ListItemPrefix>
-                <ShoppingBagIcon className="h-5 w-5" />
-              </ListItemPrefix>
-              <Link className="ml-2" to={"/newuser"}>Usuarios</Link>
-            </ListItem>
-            <ListItem>
-              <ListItemPrefix>
                 <InboxIcon className="h-5 w-5" />
               </ListItemPrefix>
-              <Link className="ml-2" to={"/newrol"}>Roles</Link>
+              <Link className="ml-2" to={"/roles"}>Roles</Link>
             </ListItem>
             <ListItem>
               <ListItemPrefix>

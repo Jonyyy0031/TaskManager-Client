@@ -6,7 +6,7 @@ import "./App.css";
 import Registro from "./components/registro/registro";
 import Home from "./components/usuarios/home";
 import Homea from "./components/admin/Homea";
-import Newuser from "./components/admin/newuser";
+import Roles from "./components/admin/roles";
 
 function App() {
   return (
@@ -18,7 +18,7 @@ function App() {
           <Route path="/home" element={<Home/>}/>
           <Route path="/homea" element={<Homea/>}/>
           <Route path="/registro" element={<Registro/>} />
-          <Route path="/newuser" element={<Newuser/>} />
+          <Route path="/roles" element={<Roles/>} />
         </Routes>
       </Fragment>
     </Router>
