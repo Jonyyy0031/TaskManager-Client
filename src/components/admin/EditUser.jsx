@@ -12,6 +12,7 @@ import {
   Typography,
   Input,
   IconButton,
+  Alert,
 } from "@material-tailwind/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
@@ -35,6 +36,10 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
 
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [invalidCharacters, setInvalidCharacters] = useState("");
+  const [invalidCharactersEmail, setInvalidCharactersEmail] = useState("");
+  const [invalidRole, setInvalidRole] = useState("");
+
   const handleChange = (e, name) => {
     const value = e.target ? e.target.value : e;
     setFormData({ ...formData, [name]: value });

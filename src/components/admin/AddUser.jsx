@@ -12,6 +12,7 @@ import {
   Typography,
   Input,
   IconButton,
+  Alert,
 } from "@material-tailwind/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
@@ -26,7 +27,7 @@ function AddUser({ onUserAdded }) {
         guardarroles(response.data);
       })
       .catch((error) => {
-        console.error("Error al obtener los roles:", error);
+        console.error("Error obteniendo roles:", error);
       });
   }, []);
 
@@ -39,16 +40,48 @@ function AddUser({ onUserAdded }) {
   });
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [invalidCharacters, setInvalidCharacters] = useState("");
+  const [invalidCharactersEmail, setInvalidCharactersEmail] = useState("");
+  const [invalidRole, setInvalidRole] = useState("");
+
   const handleChange = (e, name) => {
     const value = e.target ? e.target.value : e;
     setFormData({ ...formData, [name]: value });
+    setInvalidCharacters(""); 
+    setInvalidCharactersEmail(""); 
+    setInvalidRole(""); 
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const Uname = formData.username;
+    if (!/^[a-zA-Z\s]*$/.test(Uname)) {
+      setInvalidCharacters("Only letters are accepted.");
+      return;
+    }
+
+    if (Uname.length > 20) {
+      setInvalidCharacters("The name is too long.");
+      return;
+    }
+
+    const Emailvalue = formData.email;
+    if(/[$#""\-+]/g.test(Emailvalue)){
+      setInvalidCharactersEmail("Special characters are not accepted in email.");
+      return
+    }
+
+    if (!formData.ID_Rol) {
+      setInvalidRole("Please select a role.");
+      return;
+    }
+
     if (formData.password !== formData.confirmpassword) {
-      setError("Las contraseñas no coinciden");
+      setError("Passwords do not match.");
+      setTimeout(() => {
+        setError("");
+      }, 3000);
       return;
     }
 
@@ -60,7 +93,7 @@ function AddUser({ onUserAdded }) {
         password: formData.password,
       });
       if (response.status === 201) {
-        setSuccessMessage("Usuario creado correctamente");
+        setSuccessMessage("Successfully created user");
         setError("");
         setFormData({
           ID_Rol: "",
@@ -77,18 +110,24 @@ function AddUser({ onUserAdded }) {
       }
     } catch (error) {
       if (
-        error.response.data.error === "El nombre de usuario ya esta en uso" &&
+        error.response.data.error === "Username already in use" &&
         error.response.status === 400
       ) {
-        setError("El nombre de usuario ya está en uso");
+        setInvalidRole("");
+        setInvalidCharacters("");
+        setInvalidCharactersEmail("");
+        setError("Username already in use");
       } else if (
-        error.response.data.error === "El correo electronico ya esta en uso" &&
+        error.response.data.error === "Email already in use" &&
         error.response.status === 400
       ) {
-        setError("El correo electronico ya esta en uso");
+        setInvalidRole("");
+        setInvalidCharacters("");
+        setInvalidCharactersEmail("");
+        setError("Email already in use");
       } else {
         setError(
-          "Error en el servidor. Por favor, inténtalo de nuevo más tarde."
+          "Username or Email already in use"
         );
       }
       setTimeout(() => {
@@ -99,7 +138,7 @@ function AddUser({ onUserAdded }) {
 
   return (
     <Fragment>
-      <Button onClick={handleOpen}>Nuevo usuario</Button>
+      <Button onClick={handleOpen}>New user</Button>
       <Dialog size="xs" open={open} className="bg-transparent shadow-none">
         <Card className="mx-auto w-full max-w-[24rem]">
           <form onSubmit={handleSubmit}>
@@ -120,9 +159,29 @@ function AddUser({ onUserAdded }) {
                   className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-4"
                   role="alert"
                 >
-                  <strong className="font-bold">Éxito!</strong>
+                  <strong className="font-bold">Success!</strong>
                   <span className="block sm:inline"> {successMessage}</span>
                 </div>
+              )}
+              {invalidCharacters && (
+                <Alert color="yellow" className="mt-4">
+                  {invalidCharacters}
+                </Alert>
+              )}
+              {invalidCharactersEmail && (
+                <Alert color="yellow" className="mt-4">
+                  {invalidCharactersEmail}
+                </Alert>
+              )}
+                {invalidRole && (
+                  <Alert color="yellow" className="mt-4">
+                    {invalidRole}
+                  </Alert>
+                )}
+              {error && (
+                <Alert color="yellow" className="mt-4">
+                  {error}
+                </Alert>
               )}
               <Typography
                 className="mb-1 font-normal"
@@ -132,11 +191,11 @@ function AddUser({ onUserAdded }) {
                 Please enter information
               </Typography>
               <Typography className="" variant="h6">
-                Rol
+                Role
               </Typography>
               <Select
                 color="red"
-                label="Select Rol"
+                label="Select Role"
                 required
                 value={formData.ID_Rol}
                 onChange={(e) => handleChange(e, "ID_Rol")}
@@ -200,7 +259,7 @@ function AddUser({ onUserAdded }) {
               </div>
             </CardBody>
             <CardFooter className="pt-0">
-              {error && <span className="text-red-500">{error}</span>}
+
               <div className="flex flex-col mt-2">
                 <Button variant="gradient" type="submit" fullWidth>
                   Create account
@@ -213,7 +272,9 @@ function AddUser({ onUserAdded }) {
     </Fragment>
   );
 }
+
 AddUser.propTypes = {
-  onUserAdded: PropTypes.func.isRequired,
+  onUserAdded: PropTypes.func.isRequired,    
 };
+   
 export default AddUser;
