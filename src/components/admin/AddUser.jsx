@@ -173,11 +173,19 @@ function AddUser({ onUserAdded }) {
                   {invalidCharactersEmail}
                 </Alert>
               )}
+<<<<<<< Updated upstream
                 {invalidRole && (
                   <Alert color="yellow" className="mt-4">
                     {invalidRole}
                   </Alert>
                 )}
+=======
+              {invalidRole && (
+                <Alert color="yellow" className="mt-4">
+                  {invalidRole}
+                </Alert>
+              )}
+>>>>>>> Stashed changes
               {error && (
                 <Alert color="yellow" className="mt-4">
                   {error}

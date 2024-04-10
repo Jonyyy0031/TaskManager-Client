@@ -33,7 +33,7 @@ const TABS = [
     value: "all",
   },
 ];
-const TABLE_HEAD = ["Usuario", "Rol", "Fecha", "Acciones"];
+const TABLE_HEAD = ["User", "Role", "Date", "Actions"];
 
 function Homea() {
   const [usuarios, setUsuarios] = useState([]);
@@ -68,7 +68,7 @@ function Homea() {
         setUsuarios(response.data);
       })
       .catch((error) => {
-        console.error("Error al obtener los datos de los usuarios:", error);
+        console.error("Error obtaining user data:", error);
       });
   }
 
@@ -86,7 +86,7 @@ function Homea() {
       setOpen(!open);
       fetchUsuarios();
     } catch (error) {
-      console.error("Error al eliminar el usuario: ", error);
+      console.error("Error deleting user: ", error);
     }
   };
 
@@ -119,10 +119,10 @@ function Homea() {
           <div className="mb-8 flex items-center justify-between gap-8">
             <div>
               <Typography variant="h5" color="blue-gray">
-                Usuarios
+                Users
               </Typography>
               <Typography color="gray" className="mt-1 font-normal">
-                Informacion acerca de todos los usuarios registrados
+                Information about all registered users
               </Typography>
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
@@ -249,12 +249,12 @@ function Homea() {
         </CardBody>
         <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
           <Typography variant="small" color="blue-gray" className="font-normal">
-            Pagina {currentPage} de{" "}
+            Page {currentPage} of {" "}
             {Math.ceil(filteredUsuarios.length / perPage)}
           </Typography>
           <div className="flex gap-2">
             <Button variant="outlined" size="sm" onClick={handlePreviousPage}>
-              Anterior
+              Former
             </Button>
             <Button
               variant="outlined"
@@ -262,7 +262,7 @@ function Homea() {
               onClick={handleNextPage}
               disabled={indexOfLastUsuario >= filteredUsuarios.length}
             >
-              Siguiente
+              Following
             </Button>
           </div>
         </CardFooter>
@@ -271,7 +271,7 @@ function Homea() {
       <Dialog size="sm" open={open}>
         <DialogHeader>
           <Typography variant="h5" color="blue-gray">
-            ¿Estas seguro?
+            You're sure?
           </Typography>
         </DialogHeader>
         <DialogBody divider className="grid place-items-center gap-4">
@@ -291,10 +291,10 @@ function Homea() {
             />
           </svg>
           <Typography color="red" variant="h4">
-            Estas apunto de eliminar un usuario!
+            You are about to delete a user!
           </Typography>
           <Typography className="text-center font-normal">
-            Esta accion es irreversible!
+            This action is irreversible!
           </Typography>
         </DialogBody>
         <DialogFooter className="space-x-2">
@@ -302,7 +302,7 @@ function Homea() {
             Cancel
           </Button>
           <Button color="red" onClick={() => deleteUsuario(usuarioID)}>
-            Lo entiendo y quiero continuar
+            I understand and I want to continue.
           </Button>
         </DialogFooter>
       </Dialog>

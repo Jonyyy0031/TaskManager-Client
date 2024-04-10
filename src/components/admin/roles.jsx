@@ -32,7 +32,7 @@ const TABS = [
   },
 ];
 
-const TABLE_HEAD = ["Rol", "Nombre", "Acciones"];
+const TABLE_HEAD = ["Role", "Name", "Actions"];
 
 function Roles() {
   const [roles, setRoles] = useState([]);
@@ -64,7 +64,7 @@ function Roles() {
         setRoles(response.data);
       })
       .catch((error) => {
-        console.error("Error al obtener los datos de los roles:", error);
+        console.error("Error getting role data:", error);
       });
   }
 
@@ -79,7 +79,7 @@ function Roles() {
       setOpen(!open);
       fetchRoles();
     } catch (error) {
-      console.error("Error al eliminar el rol: ", error);
+      console.error("Error deleting role: ", error);
     }
   };
 
@@ -114,7 +114,7 @@ function Roles() {
                 Roles
               </Typography>
               <Typography color="gray" className="mt-1 font-normal">
-                Informacion acerca de todos los roles existentes
+                Information about all existing roles
               </Typography>
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
@@ -229,7 +229,7 @@ function Roles() {
           </Typography>
           <div className="flex gap-2">
             <Button variant="outlined" size="sm" onClick={handlePreviousPage}>
-              Anterior
+              Former
             </Button>
             <Button
               variant="outlined"
@@ -237,7 +237,7 @@ function Roles() {
               onClick={handleNextPage}
               disabled={indexOfLastRol >= filteredRoles.length}
             >
-              Siguiente
+              Following
             </Button>
           </div>
         </CardFooter>
@@ -246,7 +246,7 @@ function Roles() {
       <Dialog size="sm" open={open}>
         <DialogHeader>
           <Typography variant="h5" color="blue-gray">
-            ¿Estas seguro?
+            You're sure?
           </Typography>
         </DialogHeader>
         <DialogBody divider className="grid place-items-center gap-4">
@@ -266,10 +266,10 @@ function Roles() {
             />
           </svg>
           <Typography color="red" variant="h4">
-            Estas apunto de eliminar un Rol!
+            You are about to delete a Role!
           </Typography>
           <Typography className="text-center font-normal">
-            Esta accion es irreversible!
+            This action is irreversible!
           </Typography>
         </DialogBody>
         <DialogFooter className="space-x-2">
@@ -277,7 +277,7 @@ function Roles() {
             Cancel
           </Button>
           <Button color="red" onClick={() => deleteRol(rolID)}>
-            Lo entiendo y quiero continuar
+            I understand and I want to continue.
           </Button>
         </DialogFooter>
       </Dialog>

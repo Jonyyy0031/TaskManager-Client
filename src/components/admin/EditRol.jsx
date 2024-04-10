@@ -10,6 +10,7 @@ import {
   Typography,
   Input,
   IconButton,
+  Alert,
 } from "@material-tailwind/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
@@ -20,11 +21,18 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
     handleCloseEdit();
   };
 
+  const [formData, setFormData] = useState({
+    Nombre: ""
+  });
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [invalidCharacters, setInvalidCharacters] = useState("");
+
   const handleChange = (e, name) => {
     const value = e.target ? e.target.value : e;
+
     setFormData({ ...formData, [name]: value });
+    setInvalidCharacters(""); 
   };
 
   useEffect(() => {
@@ -36,33 +44,41 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
           Nombre: rolData.Nombre
         });
       } catch (error) {
-        console.error("Error al obtener datos del rol:", error);
-        setError("Error al obtener datos del rol");
+        console.error("Error getting role data:", error);
+        setError("Error getting role data:");
       }
     };
 
     fetchRolData();
   }, [rolID]);
 
-  const [formData, setFormData] = useState({
-    Nombre: ""
-  });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const value = formData.Nombre;
+
+    if (!/^[a-zA-Z\s]*$/.test(value)) {
+      setInvalidCharacters("Only letters are accepted.");
+      return;
+    }
+
+    if (value.length > 20) {
+      setInvalidCharacters("The name is too long.");
+      return;
+    }
 
     try {
       const response = await ClienteAxios.patch(`/roles/${rolID}`, {
         Nombre: formData.Nombre
       });
       if (response.status === 201) {
-        setSuccessMessage("Rol editado correctamente");
+        setSuccessMessage("Successfully edited role.");
         setError("");
         onRolEdited();
         setTimeout(() => {
           handleClose();
           setFormData({
-            Nombre : ""
+            Nombre: ""
           });
           setSuccessMessage("");
         }, 3500);
@@ -70,13 +86,13 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
     } catch (error) {
       console.log(error.response.data.error);
       if (
-        error.response.data.error === "El nombre del rol ya existe" &&
+        error.response.data.error === "The role name already exists." &&
         error.response.status === 400
       ) {
-        setError("El nombre del rol ya existe");
-      }  else {
+        setError("The role name already exists.");
+      } else {
         setError(
-          "Error en el servidor. Por favor, inténtalo de nuevo más tarde."
+          "The role name already exists."
         );
       }
       setTimeout(() => {
@@ -84,6 +100,7 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
       }, 5000);
     }
   };
+
   return (
     <Fragment>
       <Dialog size="xs" open={open} className="bg-transparent shadow-none">
@@ -102,13 +119,19 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
               </div>
 
               {successMessage && (
-                <div
-                  className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-4"
-                  role="alert"
-                >
-                  <strong className="font-bold">Éxito!</strong>
-                  <span className="block sm:inline"> {successMessage}</span>
-                </div>
+                <Alert color="green" className="mt-4">
+                  <strong>Éxito!</strong> {successMessage}
+                </Alert>
+              )}
+              {invalidCharacters && (
+                <Alert color="yellow" className="mt-4">
+                  {invalidCharacters}
+                </Alert>
+              )}
+              {error && (
+                <Alert color="red" className="mt-4">
+                  {error}
+                </Alert>
               )}
               <Typography
                 className="mb-1 font-normal"
@@ -118,18 +141,17 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
                 Please enter information
               </Typography>
               <Typography className="" variant="h6">
-                Nombre
+                Name
               </Typography>
               <Input
                 name="Nombre"
                 value={formData.Nombre}
                 onChange={(e) => handleChange(e, "Nombre")}
-                label="Nombre"
+                label="Name"
                 required
               />
             </CardBody>
             <CardFooter className="pt-0">
-              {error && <span className="text-red-500">{error}</span>}
               <div className="flex flex-col mt-2">
                 <Button variant="gradient" type="submit" fullWidth>
                   Edit rol
@@ -142,9 +164,11 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
     </Fragment>
   );
 }
+
 EditRol.propTypes = {
   rolID: PropTypes.number.isRequired,
   handleCloseEdit: PropTypes.func.isRequired,
   onRolEdited: PropTypes.func.isRequired,
 };
+
 export default EditRol;
