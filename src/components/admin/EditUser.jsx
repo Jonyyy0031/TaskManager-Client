@@ -1,4 +1,5 @@
-import React, { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
+import {useNavigate} from "react-router-dom"
 import PropTypes from "prop-types";
 import ClienteAxios from "../../config/axios";
 import {
@@ -12,6 +13,7 @@ import {
   Typography,
   Input,
   IconButton,
+  Avatar,
 } from "@material-tailwind/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
@@ -21,6 +23,9 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
     setOpen(false);
     handleCloseEdit();
   };
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [roles, saveroles] = useState([]);
   useEffect(() => {
@@ -29,12 +34,16 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
         saveroles(response.data);
       })
       .catch((error) => {
+        if (
+          error.response.data.error == "Token no encontrado" ||
+          error.response.data.error == "Falta el encabezado de autorizacion"
+        ) {
+          navigate("/login");
+        }
         console.error("Error al obtener los roles:", error);
       });
-  }, []);
+  }, [navigate]);
 
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const handleChange = (e, name) => {
     const value = e.target ? e.target.value : e;
     setFormData({ ...formData, [name]: value });
@@ -45,18 +54,26 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
       try {
         const response = await ClienteAxios.get(`/usuarios/${usuarioID}`);
         const userData = response.data;
+        console.log(userData)
         setFormData({
           username: userData.Username,
           email: userData.Email,
+          Imagen: userData.Imagen
         });
       } catch (error) {
+        if (
+          error.response.data.error == "Token no encontrado" ||
+          error.response.data.error == "Falta el encabezado de autorizacion"
+        ) {
+          navigate("/login");
+        }
         console.error("Error al obtener datos del usuario:", error);
         setError("Error al obtener datos del usuario");
       }
     };
 
     fetchUserData();
-  }, [usuarioID]);
+  }, [usuarioID, navigate]);
 
   const [formData, setFormData] = useState({
     ID_Rol: "",
@@ -152,6 +169,7 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
               >
                 Please enter information
               </Typography>
+              <Avatar src={`http://localhost:8888/${formData.Imagen}`} size="sm" />
               <Typography className="" variant="h6">
                 Rol
               </Typography>

@@ -1,6 +1,5 @@
-// eslint-disable-next-line no-unused-vars
-import React, { Fragment, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"
+import { Fragment, useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import EditUser from "./EditUser";
 import AddUser from "./AddUser";
 import Sidebaradmin from "./sidebaradmin";
@@ -37,20 +36,24 @@ const TABS = [
 const TABLE_HEAD = ["Usuario", "Rol", "Fecha", "Acciones"];
 
 function Homea() {
-  const [usuarios, setUsuarios] = useState([]);
+  const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage] = useState(10);
   const [usuarioID, setUsuarioID] = useState(null);
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(!open);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedUserID, setSelectedUserID] = useState(null);
 
-  const filteredUsuarios = usuarios.filter((usuario) =>
-    usuario.Username.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsuarios = users.filter((usuario) =>
+    usuario.Username.toLowerCase().includes(searchTerm.toLowerCase()),
   );
   const indexOfLastUsuario = currentPage * perPage;
   const indexOfFirstUsuario = indexOfLastUsuario - perPage;
   const currentUsuarios = filteredUsuarios.slice(
     indexOfFirstUsuario,
-    indexOfLastUsuario
+    indexOfLastUsuario,
   );
 
   const handlePreviousPage = () => {
@@ -63,39 +66,41 @@ function Homea() {
     }
   };
 
-  function fetchUsuarios() {
+  const navigate = useNavigate();
+
+  const fetchUsers = useCallback(() => {
     ClienteAxios.get("/usuarios")
       .then((response) => {
-        setUsuarios(response.data);
+        setUsers(response.data);
       })
       .catch((error) => {
-        console.error("Error al obtener los datos de los usuarios:", error);
+          if (error.response.data.error == "Token no encontrado" || error.response.data.error == "Falta el encabezado de autorizacion") {
+          navigate("/login");
+        }
+        else{
+          console.error("Error al obtener los datos de los usuarios:", error);
+        }
       });
-  }
+  }, [navigate]);
 
   useEffect(() => {
-    fetchUsuarios();
-  }, []);
+    fetchUsers();
+  }, [fetchUsers]);
 
   const deleteUsuario = async (ID_Usuario) => {
     try {
       const response = await ClienteAxios.delete(
-        "/usuarios/" + ID_Usuario + ""
+        "/usuarios/" + ID_Usuario + "",
       );
       console.log(ID_Usuario);
       console.log(response);
       setOpen(!open);
-      fetchUsuarios();
+      fetchUsers();
     } catch (error) {
       console.error("Error al eliminar el usuario: ", error);
     }
   };
 
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(!open);
-
-  const [editMode, setEditMode] = useState(false);
-  const [selectedUserID, setSelectedUserID] = useState(null);
   const handleEditClick = (userID) => {
     setEditMode(true);
     setSelectedUserID(userID);
@@ -111,11 +116,11 @@ function Homea() {
       {editMode && (
         <EditUser
           usuarioID={selectedUserID}
-          onUserEdited={fetchUsuarios}
+          onUserEdited={fetchUsers}
           handleCloseEdit={handleCloseEdit}
         />
       )}
-      <Card className="block h-full w-full max-w-screen-2xl mx-auto rounded-2xl mt-4 mb-4 p-2 lg:rounded-3xl lg:pl-3">
+      <Card className="mx-auto mb-4 mt-4 block h-full w-full max-w-screen-2xl rounded-2xl p-2 lg:rounded-3xl lg:pl-3">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-8 flex items-center justify-between gap-8">
             <div>
@@ -127,7 +132,7 @@ function Homea() {
               </Typography>
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-              <AddUser onUserAdded={fetchUsuarios} />
+              <AddUser onUserAdded={fetchUsers} />
             </div>
           </div>
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
@@ -181,7 +186,7 @@ function Homea() {
                   <tr key={usuario.ID_Usuario}>
                     <td className={classes}>
                       <div className="flex items-center gap-3">
-                        <Avatar src="" size="sm" />
+                        <Avatar src={`http://localhost:8888/${usuario.Imagen}`} size="sm" />
                         <div className="flex flex-col">
                           <Typography
                             variant="small"
@@ -277,7 +282,7 @@ function Homea() {
         </DialogHeader>
         <DialogBody divider className="grid place-items-center gap-4">
           <svg
-            className="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200"
+            className="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
             aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

@@ -1,4 +1,6 @@
-import React, { Fragment, useState, useEffect, useRef } from "react";
+// eslint-disable-next-line no-unused-vars
+import React, { Fragment, useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom"
 import Nav from "../layout/Nav";
 import Footer from "../layout/Footer";
 import ClienteAxios from "../../config/axios";
@@ -13,6 +15,7 @@ import {
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
 
 function Home() {
+  const navigate = useNavigate()
   const [listas, setListas] = useState([]);
   const [tareas, setTareas] = useState([]);
   const [showTaskInputs, setShowTaskInputs] = useState({});
@@ -45,25 +48,28 @@ function Home() {
     setShowTaskInputs({});
   };
 
-  function fetchTareas() {
+  const fetchTareas = useCallback(()=> {
     ClienteAxios.get("/tareas")
       .then((response) => {
         setTareas(response.data);
       })
       .catch((error) => {
-        console.error("Error al obtener los datos de las listas:", error);
+        if(error.response.data.error == "Token no encontrado" || error.response.data.error == "Falta el encabezado de autorizacion"){
+          navigate("/login")
+        }else{
+          console.error("Error al obtener los datos de las tareas:", error);
+        }
       });
-  }
+    }, [navigate])
 
   useEffect(() => {
     fetchTareas();
-  }, []);
+  }, [fetchTareas]);
 
-  function fetchListas() {
+  const fetchListas = useCallback(() => {
     ClienteAxios.get("/listas")
       .then((response) => {
         setListas(response.data);
-        // Inicializamos el estado para mostrar los inputs para cada lista
         const initialState = response.data.reduce((acc, lista) => {
           acc[lista.ID_Lista] = false;
           return acc;
@@ -71,13 +77,17 @@ function Home() {
         setShowTaskInputs(initialState);
       })
       .catch((error) => {
-        console.error("Error al obtener los datos de las listas:", error);
+        if(error.response.data.error == "Token no encontrado" || error.response.data.error == "Falta el encabezado de autorizacion"){
+          navigate("/login")
+        }else{
+          console.error("Error al obtener los datos de las listas:", error);
+        }
       });
-  }
+  }, [navigate])
 
   useEffect(() => {
     fetchListas();
-  }, []);
+  }, [fetchListas]);
 
   return (
     <Fragment>

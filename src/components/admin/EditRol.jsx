@@ -1,4 +1,5 @@
-import React, { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
+import {useNavigate} from "react-router-dom"
 import PropTypes from "prop-types";
 import ClienteAxios from "../../config/axios";
 import {
@@ -19,9 +20,10 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
     setOpen(false);
     handleCloseEdit();
   };
-
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const navigate = useNavigate();
+
   const handleChange = (e, name) => {
     const value = e.target ? e.target.value : e;
     setFormData({ ...formData, [name]: value });
@@ -33,19 +35,25 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
         const response = await ClienteAxios.get(`/roles/${rolID}`);
         const rolData = response.data;
         setFormData({
-          Nombre: rolData.Nombre
+          Nombre: rolData.Nombre,
         });
       } catch (error) {
+        if (
+          error.response.data.error == "Token no encontrado" ||
+          error.response.data.error == "Falta el encabezado de autorizacion"
+        ) {
+          navigate("/login");
+        }
         console.error("Error al obtener datos del rol:", error);
         setError("Error al obtener datos del rol");
       }
     };
 
     fetchRolData();
-  }, [rolID]);
+  }, [rolID, navigate]);
 
   const [formData, setFormData] = useState({
-    Nombre: ""
+    Nombre: "",
   });
 
   const handleSubmit = async (e) => {
@@ -53,7 +61,7 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
 
     try {
       const response = await ClienteAxios.patch(`/roles/${rolID}`, {
-        Nombre: formData.Nombre
+        Nombre: formData.Nombre,
       });
       if (response.status === 201) {
         setSuccessMessage("Rol editado correctamente");
@@ -62,7 +70,7 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
         setTimeout(() => {
           handleClose();
           setFormData({
-            Nombre : ""
+            Nombre: "",
           });
           setSuccessMessage("");
         }, 3500);
@@ -74,9 +82,15 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
         error.response.status === 400
       ) {
         setError("El nombre del rol ya existe");
-      }  else {
+      }
+      if (
+        error.response.data.error == "Token no encontrado" ||
+        error.response.data.error == "Falta el encabezado de autorizacion"
+      ) {
+        navigate("/login");
+      } else {
         setError(
-          "Error en el servidor. Por favor, inténtalo de nuevo más tarde."
+          "Error en el servidor. Por favor, inténtalo de nuevo más tarde.",
         );
       }
       setTimeout(() => {
@@ -84,13 +98,14 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
       }, 5000);
     }
   };
+
   return (
     <Fragment>
       <Dialog size="xs" open={open} className="bg-transparent shadow-none">
         <Card className="mx-auto w-full max-w-[24rem]">
           <form onSubmit={handleSubmit}>
             <CardBody className="flex flex-col gap-4">
-              <div className="flex justify-between items-center space-x-4">
+              <div className="flex items-center justify-between space-x-4">
                 <Typography variant="h4" color="blue-gray">
                   Edit Rol
                 </Typography>
@@ -103,7 +118,7 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
 
               {successMessage && (
                 <div
-                  className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-4"
+                  className="relative mt-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
                   role="alert"
                 >
                   <strong className="font-bold">Éxito!</strong>
@@ -130,7 +145,7 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
             </CardBody>
             <CardFooter className="pt-0">
               {error && <span className="text-red-500">{error}</span>}
-              <div className="flex flex-col mt-2">
+              <div className="mt-2 flex flex-col">
                 <Button variant="gradient" type="submit" fullWidth>
                   Edit rol
                 </Button>

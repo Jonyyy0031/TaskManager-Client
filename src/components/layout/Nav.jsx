@@ -1,5 +1,6 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import {jwtDecode} from "jwt-decode"
 import {
   Input,
   Typography,
@@ -10,34 +11,37 @@ import {
   MenuList,
   MenuItem,
   Avatar,
-  Collapse,
 } from "@material-tailwind/react";
 import {
-  UserCircleIcon,
-  Cog6ToothIcon,
   PowerIcon,
   ChevronDownIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/solid";
 
 function Nav() {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const navigate = useNavigate();
+
   const profileMenuItems = [
-    {
-      label: "My Profile",
-      icon: UserCircleIcon,
-    },
-    {
-      label: "Edit Profile",
-      icon: Cog6ToothIcon,
-    },
     {
       label: "Sign Out",
       icon: PowerIcon,
     },
   ];
-
+  
   function ProfileMenu() {
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate("/login");
+      return null;
+  }
+    const decodeToken = jwtDecode(token)
+    const userImage = decodeToken.imagen
+  
+    const handleLogout= () =>{
+      localStorage.removeItem('token');
+      navigate("/login")
+    }
 
     const closeMenu = () => setIsMenuOpen(false);
 
@@ -47,14 +51,14 @@ function Nav() {
           <Button
             variant="text"
             color="blue-gray"
-            className="flex items-center gap-1 rounded-full py-0.5 pr-2 pl-0.5 lg:ml-auto"
+            className="flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-2 lg:ml-auto"
           >
             <Avatar
               variant="circular"
-              size="sm"
+              size="md"
               alt=""
-              className="border border-gray-900 p-0.5 w-10 h-10"
-              src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1480&q=80"
+              className="h-12 w-12 border border-gray-900 p-0.5"
+              src={`http://localhost:8888/${userImage}`}
             />
             <ChevronDownIcon
               strokeWidth={2.5}
@@ -81,14 +85,14 @@ function Nav() {
                   className: `h-4 w-4 ${isLastItem ? "text-red-500" : ""}`,
                   strokeWidth: 2,
                 })}
-                <Typography
-                  as="span"
-                  variant="small"
-                  className="font-normal"
-                  color={isLastItem ? "red" : "inherit"}
-                >
-                  {label}
-                </Typography>
+                <Button
+                variant="text"
+                size="sm"
+                color="red"
+                className="w-full"
+                onClick={handleLogout}>
+                  Log out
+                </Button>
               </MenuItem>
             );
           })}
@@ -96,67 +100,66 @@ function Nav() {
       </Menu>
     );
   }
+  // // nav list component
+  // const navListItems = [];
 
-  // nav list component
-  const navListItems = [];
+  // function NavList() {
+  //   return (
+  //     <ul className="mt-2 mb-4 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center">
+  //       {navListItems.map(({ label, icon }) => (
+  //         <Typography
+  //           key={label}
+  //           as="a"
+  //           href="#"
+  //           variant="small"
+  //           color="gray"
+  //           className="font-medium text-blue-gray-500"
+  //         >
+  //           <MenuItem className="flex items-center gap-2 lg:rounded-full">
+  //             {React.createElement(icon, { className: "h-[18px] w-[18px]" })}{" "}
+  //             <span className="text-gray-900"> {label}</span>
+  //           </MenuItem>
+  //         </Typography>
+  //       ))}
+  //     </ul>
+  //   );
+  // }
 
-  function NavList() {
-    return (
-      <ul className="mt-2 mb-4 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center">
-        {navListItems.map(({ label, icon }) => (
-          <Typography
-            key={label}
-            as="a"
-            href="#"
-            variant="small"
-            color="gray"
-            className="font-medium text-blue-gray-500"
-          >
-            <MenuItem className="flex items-center gap-2 lg:rounded-full">
-              {React.createElement(icon, { className: "h-[18px] w-[18px]" })}{" "}
-              <span className="text-gray-900"> {label}</span>
-            </MenuItem>
-          </Typography>
-        ))}
-      </ul>
-    );
-  }
+  // const [isNavOpen, setIsNavOpen] = React.useState(false);
 
-  const [isNavOpen, setIsNavOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    window.addEventListener(
-      "resize",
-      () => window.innerWidth >= 960 && setIsNavOpen(false)
-    );
-  }, []);
+  // React.useEffect(() => {
+  //   window.addEventListener(
+  //     "resize",
+  //     () => window.innerWidth >= 960 && setIsNavOpen(false)
+  //   );
+  // }, []);
 
   return (
     <>
-      <Navbar className="mx-auto max-w-screen p-2 lg:rounded-3xl lg:pl-3">
-        <div className="flex items-center justify-between text-blue-gray-900">
+      <Navbar className="max-w-screen mx-auto p-2 lg:rounded-3xl lg:pl-3">
+        <div className="relative flex mx-auto items-center justify-between text-blue-gray-900">
           <Typography className="mr-4 ml-2 cursor-pointer py-1.5 font-medium text-black">
             <Link>TaskBoard</Link>
           </Typography>
-          <div className="hidden lg:flex flex-grow justify-center">
-            <div className="flex text-center align-middle">
+          <div className="flex flex-grow justify-center">
+            <div className="flex text-center">
               <Input
                 label="Search"
                 icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                 // value={searchTerm}
                 // onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: '400px' }}
+                
               />
             </div>
           </div>
-          <div className="hidden lg:block">
+          {/* <div className="hidden lg:block">
             <NavList />
-          </div>
-          <ProfileMenu />
+          </div> */}
+          <ProfileMenu /> 
         </div>
-        <Collapse open={isNavOpen} className="overflow-scroll">
+        {/* <Collapse open={isNavOpen} className="overflow-scroll">
           <NavList />
-        </Collapse>
+        </Collapse> */}
       </Navbar>
     </>
   );

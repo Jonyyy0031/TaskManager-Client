@@ -1,4 +1,5 @@
-import React, { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"
 import AddRol from "./AddRol";
 import EditRol from "./EditRol";
 import Sidebaradmin from "./sidebaradmin";
@@ -35,6 +36,7 @@ const TABS = [
 const TABLE_HEAD = ["Rol", "Nombre", "Acciones"];
 
 function Roles() {
+  const navigate = useNavigate();
   const [roles, setRoles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,20 +59,24 @@ function Roles() {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
+  
 
-  function fetchRoles() {
+  const fetchRoles = useCallback(() => {
     ClienteAxios.get("/roles")
       .then((response) => {
         setRoles(response.data);
       })
       .catch((error) => {
+        if(error.response.data.error === "Token no encontrado"){
+          navigate("/login")
+        }
         console.error("Error al obtener los datos de los roles:", error);
       });
-  }
+  }, [navigate]);
 
   useEffect(() => {
     fetchRoles();
-  }, []);
+  }, [fetchRoles]);
 
   const deleteRol = async (ID_Rol) => {
     try {
@@ -83,7 +89,7 @@ function Roles() {
     }
   };
 
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(!open);
 
   const [editMode, setEditMode] = useState(false);

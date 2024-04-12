@@ -1,4 +1,5 @@
-import React, { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
+import {useNavigate} from "react-router-dom"
 import PropTypes from "prop-types";
 import ClienteAxios from "../../config/axios";
 import {
@@ -14,60 +15,88 @@ import {
   IconButton,
 } from "@material-tailwind/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
+import { UserCircleIcon } from "@heroicons/react/24/outline";
 
 function AddUser({ onUserAdded }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen((cur) => !cur);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const navigate = useNavigate();
 
-  const [roles, guardarroles] = useState([]);
+  const [roles, saveRoles] = useState([]);
   useEffect(() => {
     ClienteAxios.get("/roles")
       .then((response) => {
-        guardarroles(response.data);
+        saveRoles(response.data);
       })
       .catch((error) => {
+        if (
+          error.response.data.error == "Token no encontrado" ||
+          error.response.data.error == "Falta el encabezado de autorizacion"
+        ) {
+          navigate("/login");
+        }
         console.error("Error al obtener los roles:", error);
       });
-  }, []);
+  }, [navigate]);
 
-  const [formData, setFormData] = useState({
+  const [user, saveUser] = useState({
     ID_Rol: "",
     username: "",
     email: "",
     password: "",
     confirmpassword: "",
+    imagen: "",
   });
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+
   const handleChange = (e, name) => {
     const value = e.target ? e.target.value : e;
-    setFormData({ ...formData, [name]: value });
+    saveUser({ ...user, [name]: value });
+  };
+
+  const [img, setImg] = useState(null);
+  const [imgTemp, setImgtemp] = useState(null);
+
+  const handleImageChange = e => {
+    if (e.target.files[0]) {
+      setImg(e.target.files[0]);
+      setImgtemp(URL.createObjectURL(e.target.files[0]));
+    }
+    console.log(e.target.files)
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmpassword) {
+    if (user.password !== user.confirmpassword) {
       setError("Las contraseñas no coinciden");
       return;
     }
 
+    if (!img) {
+      setError("Por favor, seleccione una imagen");
+      return;
+    }
+
+    const form = new FormData();
+    form.append("ID_Rol", user.ID_Rol);
+    form.append("username", user.username);
+    form.append("email", user.email);
+    form.append("password", user.password);
+    form.append("file", img);
     try {
-      const response = await ClienteAxios.post("/usuarios", {
-        ID_Rol: formData.ID_Rol,
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      });
+      const response = await ClienteAxios.post("/usuarios", form);
       if (response.status === 201) {
         setSuccessMessage("Usuario creado correctamente");
         setError("");
-        setFormData({
+        saveUser({
           ID_Rol: "",
           username: "",
           email: "",
           password: "",
           confirmPassword: "",
+          imagen: "",
         });
         onUserAdded();
         setTimeout(() => {
@@ -88,8 +117,9 @@ function AddUser({ onUserAdded }) {
         setError("El correo electronico ya esta en uso");
       } else {
         setError(
-          "Error en el servidor. Por favor, inténtalo de nuevo más tarde."
+          "Error en el servidor. Por favor, inténtalo de nuevo más tarde.",
         );
+        console.log(error);
       }
       setTimeout(() => {
         setError("");
@@ -104,7 +134,7 @@ function AddUser({ onUserAdded }) {
         <Card className="mx-auto w-full max-w-[24rem]">
           <form onSubmit={handleSubmit}>
             <CardBody className="flex flex-col gap-4">
-              <div className="flex justify-between items-center space-x-4">
+              <div className="flex items-center justify-between space-x-4">
                 <Typography variant="h4" color="blue-gray">
                   Create a new user
                 </Typography>
@@ -117,7 +147,7 @@ function AddUser({ onUserAdded }) {
 
               {successMessage && (
                 <div
-                  className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-4"
+                  className="relative mt-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
                   role="alert"
                 >
                   <strong className="font-bold">Éxito!</strong>
@@ -131,6 +161,28 @@ function AddUser({ onUserAdded }) {
               >
                 Please enter information
               </Typography>
+              <div className="relative mx-auto h-24 w-24 animate-pulse rounded-full bg-gray-300">
+                <div className="relative grid h-24 w-24 place-items-center rounded-full bg-gray-300">
+                  {img ? (
+                    <img
+                      src={imgTemp}
+                      alt="user-avatar"
+                      className="absolute left-0 top-0 h-full w-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserCircleIcon className="absolute left-1/2 top-1/2 h-[64px] w-[64px] -translate-x-1/2 -translate-y-1/2 transform" />
+                  )}
+                  <label className="absolute left-0 top-0 h-full w-full cursor-pointer">
+                    <input
+                      type="file"
+                      name="imagen"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                  </label>
+                </div>
+              </div>
+
               <Typography className="" variant="h6">
                 Rol
               </Typography>
@@ -138,7 +190,7 @@ function AddUser({ onUserAdded }) {
                 color="red"
                 label="Select Rol"
                 required
-                value={formData.ID_Rol}
+                value={user.ID_Rol}
                 onChange={(e) => handleChange(e, "ID_Rol")}
               >
                 {roles.map((rol) => (
@@ -152,7 +204,7 @@ function AddUser({ onUserAdded }) {
               </Typography>
               <Input
                 name="username"
-                value={formData.username}
+                value={user.username}
                 onChange={(e) => handleChange(e, "username")}
                 label="Username"
                 required
@@ -163,7 +215,7 @@ function AddUser({ onUserAdded }) {
               <Input
                 type="email"
                 name="email"
-                value={formData.email}
+                value={user.email}
                 onChange={(e) => handleChange(e, "email")}
                 label="Email"
                 required
@@ -176,10 +228,10 @@ function AddUser({ onUserAdded }) {
                   <input
                     type="password"
                     name="password"
-                    value={formData.password}
+                    value={user.password}
                     onChange={(e) => handleChange(e, "password")}
                     placeholder="••••••••"
-                    className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 border-black border-opacity-20 placeholder-black-50 text-black"
+                    className="focus:ring-primary-600 focus:border-primary-600 placeholder-black-50 block w-full rounded-lg border border-black border-opacity-20 bg-white p-2.5 text-black sm:text-sm"
                     required
                   />
                 </div>
@@ -190,10 +242,10 @@ function AddUser({ onUserAdded }) {
                   <input
                     type="password"
                     name="confirmpassword"
-                    value={formData.confirmpassword}
+                    value={user.confirmpassword}
                     onChange={(e) => handleChange(e, "confirmpassword")}
                     placeholder="••••••••"
-                    className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 border-black border-opacity-20 placeholder-black-50 text-black"
+                    className="focus:ring-primary-600 focus:border-primary-600 placeholder-black-50 block w-full rounded-lg border border-black border-opacity-20 bg-white p-2.5 text-black sm:text-sm"
                     required
                   />
                 </div>
@@ -201,7 +253,7 @@ function AddUser({ onUserAdded }) {
             </CardBody>
             <CardFooter className="pt-0">
               {error && <span className="text-red-500">{error}</span>}
-              <div className="flex flex-col mt-2">
+              <div className="mt-2 flex flex-col">
                 <Button variant="gradient" type="submit" fullWidth>
                   Create account
                 </Button>
