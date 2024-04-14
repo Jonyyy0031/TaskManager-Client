@@ -22,6 +22,8 @@ function AddUser({ onUserAdded }) {
   const handleOpen = () => setOpen((cur) => !cur);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [img, setImg] = useState(null);
+  const [imgTemp, setImgtemp] = useState(null);
   const navigate = useNavigate();
 
   const [roles, saveRoles] = useState([]);
@@ -33,7 +35,7 @@ function AddUser({ onUserAdded }) {
       .catch((error) => {
         if (
           error.response.data.error == "Token no encontrado" ||
-          error.response.data.error == "Falta el encabezado de autorizacion"
+          error.response.data.error == "No tienes permisos"
         ) {
           navigate("/login");
         }
@@ -55,8 +57,6 @@ function AddUser({ onUserAdded }) {
     saveUser({ ...user, [name]: value });
   };
 
-  const [img, setImg] = useState(null);
-  const [imgTemp, setImgtemp] = useState(null);
 
   const handleImageChange = e => {
     if (e.target.files[0]) {
@@ -70,12 +70,12 @@ function AddUser({ onUserAdded }) {
     e.preventDefault();
 
     if (user.password !== user.confirmpassword) {
-      setError("Las contraseñas no coinciden");
+      setError("Password doesn't match");
       return;
     }
 
     if (!img) {
-      setError("Por favor, seleccione una imagen");
+      setError("Please, select an image");
       return;
     }
 
@@ -88,7 +88,7 @@ function AddUser({ onUserAdded }) {
     try {
       const response = await ClienteAxios.post("/usuarios", form);
       if (response.status === 201) {
-        setSuccessMessage("Usuario creado correctamente");
+        setSuccessMessage("Done!");
         setError("");
         saveUser({
           ID_Rol: "",
@@ -109,15 +109,15 @@ function AddUser({ onUserAdded }) {
         error.response.data.error === "El nombre de usuario ya esta en uso" &&
         error.response.status === 400
       ) {
-        setError("El nombre de usuario ya está en uso");
+        setError("Username already exists");
       } else if (
         error.response.data.error === "El correo electronico ya esta en uso" &&
         error.response.status === 400
       ) {
-        setError("El correo electronico ya esta en uso");
+        setError("Email already exists");
       } else {
         setError(
-          "Error en el servidor. Por favor, inténtalo de nuevo más tarde.",
+          "Something went wrong :/",
         );
         console.log(error);
       }
@@ -129,7 +129,7 @@ function AddUser({ onUserAdded }) {
 
   return (
     <Fragment>
-      <Button onClick={handleOpen}>Nuevo usuario</Button>
+      <Button onClick={handleOpen}>New User</Button>
       <Dialog size="xs" open={open} className="bg-transparent shadow-none">
         <Card className="mx-auto w-full max-w-[24rem]">
           <form onSubmit={handleSubmit}>
@@ -150,7 +150,6 @@ function AddUser({ onUserAdded }) {
                   className="relative mt-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
                   role="alert"
                 >
-                  <strong className="font-bold">Éxito!</strong>
                   <span className="block sm:inline"> {successMessage}</span>
                 </div>
               )}
@@ -182,7 +181,6 @@ function AddUser({ onUserAdded }) {
                   </label>
                 </div>
               </div>
-
               <Typography className="" variant="h6">
                 Rol
               </Typography>

@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import {useNavigate} from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import ClienteAxios from "../../config/axios";
 import {
@@ -14,26 +14,32 @@ import {
 } from "@material-tailwind/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
-function AddRol({ onRolAdded }) {
-  const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen((cur) => !cur);
+function AddList({ ID_Usuario, handleCloseAddList, onListAdded }) {
+  const [open, setOpen] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [formData, setFormData] = useState({
+    ID_Usuario: ID_Usuario,
     Nombre: "",
   });
   const navigate = useNavigate();
+
+  const handleClose = () => {
+    setOpen(false);
+    handleCloseAddList();
+  };
 
   const handleChange = (e, name) => {
     const value = e.target ? e.target.value : e;
     setFormData({ ...formData, [name]: value });
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
-      const response = await ClienteAxios.post("/roles", {
+      const response = await ClienteAxios.post("/listas", {
+        ID_Usuario: formData.ID_Usuario,
         Nombre: formData.Nombre,
       });
       if (response.status === 201) {
@@ -42,25 +48,24 @@ function AddRol({ onRolAdded }) {
         setFormData({
           Nombre: "",
         });
-        onRolAdded();
+        onListAdded();
         setTimeout(() => {
-          setOpen(false);
+          handleClose();
           setSuccessMessage("");
         }, 3500);
       }
     } catch (error) {
-      if (
-        error.response.data.error === "El nombre del rol ya existe" &&
-        error.response.status === 400
-      ) {
-        setError("Rol name already exists");
+      if (error.response.data.error == "El nombre de la lista ya existe") {
+        setError("List name already exists");
       }
-      else if (error.response.data.error == "Token no encontrado" || error.response.data.error == "No tienes permisos") {
+      else if (
+        error.response.data.error == "Token no encontrado" ||
+        error.response.data.error == "Falta el encabezado de autorizacion"
+      ) {
         navigate("/login");
       } else {
-        setError(
-          "Ooops...,Unexpected Server Error :(",
-        );
+        setError("Ooops...,Unexpected Server Error :(");
+        console.log(error.response.data.error);
       }
       setTimeout(() => {
         setError("");
@@ -70,17 +75,16 @@ function AddRol({ onRolAdded }) {
 
   return (
     <Fragment>
-      <Button onClick={handleOpen}>New rol</Button>
       <Dialog size="xs" open={open} className="bg-transparent shadow-none">
         <Card className="mx-auto w-full max-w-[24rem]">
           <form onSubmit={handleSubmit}>
             <CardBody className="flex flex-col gap-4">
               <div className="flex items-center justify-between space-x-4">
                 <Typography variant="h4" color="blue-gray">
-                  Create a new Rol
+                  Create a new list
                 </Typography>
                 <div className="flex items-center">
-                  <IconButton variant="text" size="sm" onClick={handleOpen}>
+                  <IconButton variant="text" size="sm" onClick={handleClose}>
                     <XMarkIcon className="h-8 w-8 stroke-2"></XMarkIcon>
                   </IconButton>
                 </div>
@@ -102,7 +106,7 @@ function AddRol({ onRolAdded }) {
                 Please enter information
               </Typography>
               <Typography className="" variant="h6">
-                Rol name:
+                List name:
               </Typography>
               <Input
                 name="Nombre"
@@ -116,7 +120,7 @@ function AddRol({ onRolAdded }) {
               {error && <span className="text-red-500">{error}</span>}
               <div className="mt-2 flex flex-col">
                 <Button variant="gradient" type="submit" fullWidth>
-                  Create rol
+                  Create list
                 </Button>
               </div>
             </CardFooter>
@@ -126,7 +130,9 @@ function AddRol({ onRolAdded }) {
     </Fragment>
   );
 }
-AddRol.propTypes = {
-  onRolAdded: PropTypes.func.isRequired,
+AddList.propTypes = {
+  ID_Usuario: PropTypes.number.isRequired,
+  handleCloseAddList: PropTypes.func.isRequired,
+  onListAdded: PropTypes.func.isRequired,
 };
-export default AddRol;
+export default AddList;

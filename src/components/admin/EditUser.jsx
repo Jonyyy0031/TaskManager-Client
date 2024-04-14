@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect } from "react";
-import {useNavigate} from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import ClienteAxios from "../../config/axios";
 import {
@@ -19,13 +19,14 @@ import { XMarkIcon } from "@heroicons/react/24/solid";
 
 function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
   const [open, setOpen] = useState(true);
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   const handleClose = () => {
     setOpen(false);
     handleCloseEdit();
   };
-  const navigate = useNavigate();
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const [roles, saveroles] = useState([]);
   useEffect(() => {
@@ -36,11 +37,13 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
       .catch((error) => {
         if (
           error.response.data.error == "Token no encontrado" ||
-          error.response.data.error == "Falta el encabezado de autorizacion"
+          error.response.data.error == "No tienes permisos"
         ) {
           navigate("/login");
+        } else {
+          console.error("Error al obtener los roles:", error);
+          setError("Looks like we have problems! :(");
         }
-        console.error("Error al obtener los roles:", error);
       });
   }, [navigate]);
 
@@ -54,21 +57,22 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
       try {
         const response = await ClienteAxios.get(`/usuarios/${usuarioID}`);
         const userData = response.data;
-        console.log(userData)
+        console.log(userData);
         setFormData({
           username: userData.Username,
           email: userData.Email,
-          Imagen: userData.Imagen
+          Imagen: userData.Imagen,
         });
       } catch (error) {
         if (
           error.response.data.error == "Token no encontrado" ||
-          error.response.data.error == "Falta el encabezado de autorizacion"
+          error.response.data.error == "No tienes permisos"
         ) {
           navigate("/login");
+        } else {
+          console.error("Error al obtener datos del usuario:", error);
+          setError("Ooops, Can't get the user :(");
         }
-        console.error("Error al obtener datos del usuario:", error);
-        setError("Error al obtener datos del usuario");
       }
     };
 
@@ -87,7 +91,7 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
     e.preventDefault();
 
     if (formData.password !== formData.confirmpassword) {
-      setError("Las contraseñas no coinciden");
+      setError("Password doesn't match");
       return;
     }
 
@@ -99,7 +103,7 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
         password: formData.password,
       });
       if (response.status === 201) {
-        setSuccessMessage("Usuario editado correctamente");
+        setSuccessMessage("User sucessfully edited!");
         setError("");
         onUserEdited();
         setTimeout(() => {
@@ -117,19 +121,22 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
     } catch (error) {
       console.log(error.response.data.error);
       if (
+        error.response.data.error == "Token no encontrado" ||
+        error.response.data.error == "No tienes permisos"
+      ) {
+        navigate("/login");
+      } else if (
         error.response.data.error === "El nombre de usuario ya esta en uso" &&
         error.response.status === 400
       ) {
-        setError("El nombre de usuario ya está en uso");
+        setError("Username already exists");
       } else if (
         error.response.data.error === "El correo electronico ya esta en uso" &&
         error.response.status === 400
       ) {
-        setError("El correo electronico ya esta en uso");
+        setError("Email already exists");
       } else {
-        setError(
-          "Error en el servidor. Por favor, inténtalo de nuevo más tarde."
-        );
+        setError("Ooops..., Unexpected Server Error");
       }
       setTimeout(() => {
         setError("");
@@ -142,7 +149,7 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
         <Card className="mx-auto w-full max-w-[24rem]">
           <form onSubmit={handleSubmit}>
             <CardBody className="flex flex-col gap-4">
-              <div className="flex justify-between items-center space-x-4">
+              <div className="flex items-center justify-between space-x-4">
                 <Typography variant="h4" color="blue-gray">
                   Edit User
                 </Typography>
@@ -155,10 +162,9 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
 
               {successMessage && (
                 <div
-                  className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-4"
+                  className="relative mt-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
                   role="alert"
                 >
-                  <strong className="font-bold">Éxito!</strong>
                   <span className="block sm:inline"> {successMessage}</span>
                 </div>
               )}
@@ -169,7 +175,10 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
               >
                 Please enter information
               </Typography>
-              <Avatar src={`http://localhost:8888/${formData.Imagen}`} size="sm" />
+              <Avatar
+                src={`http://localhost:8888/${formData.Imagen}`}
+                size="sm"
+              />
               <Typography className="" variant="h6">
                 Rol
               </Typography>
@@ -217,7 +226,7 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
                     value={formData.password}
                     onChange={(e) => handleChange(e, "password")}
                     placeholder="••••••••"
-                    className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 border-black border-opacity-20 placeholder-black-50 text-black"
+                    className="focus:ring-primary-600 focus:border-primary-600 placeholder-black-50 block w-full rounded-lg border border-black border-opacity-20 bg-white p-2.5 text-black sm:text-sm"
                     required
                   />
                 </div>
@@ -231,7 +240,7 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
                     value={formData.confirmpassword}
                     onChange={(e) => handleChange(e, "confirmpassword")}
                     placeholder="••••••••"
-                    className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 border-black border-opacity-20 placeholder-black-50 text-black"
+                    className="focus:ring-primary-600 focus:border-primary-600 placeholder-black-50 block w-full rounded-lg border border-black border-opacity-20 bg-white p-2.5 text-black sm:text-sm"
                     required
                   />
                 </div>
@@ -239,7 +248,7 @@ function EditUser({ usuarioID, handleCloseEdit, onUserEdited }) {
             </CardBody>
             <CardFooter className="pt-0">
               {error && <span className="text-red-500">{error}</span>}
-              <div className="flex flex-col mt-2">
+              <div className="mt-2 flex flex-col">
                 <Button variant="gradient" type="submit" fullWidth>
                   Edit account
                 </Button>

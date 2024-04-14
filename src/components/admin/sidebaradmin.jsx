@@ -1,6 +1,6 @@
-import React, { useState} from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {jwtDecode} from "jwt-decode"
+import { jwtDecode } from "jwt-decode";
 import {
   IconButton,
   Typography,
@@ -31,7 +31,6 @@ function Sidebaradmin() {
   const closeDrawer = () => setIsDrawerOpen(false);
   const navigate = useNavigate();
 
-  
   const profileMenuItems = [
     {
       label: "Sign Out",
@@ -41,18 +40,21 @@ function Sidebaradmin() {
 
   function ProfileMenu() {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const token = localStorage.getItem("token");
+
+    useEffect(() => {
+      if (!token) {
+        navigate("/login");
+      }
+    }, [token]);
+    
+    const decodeToken = jwtDecode(token);
+    const userImage = decodeToken.imagen;
+
+    const handleLogout = () => {
+      localStorage.removeItem("token");
       navigate("/login");
-      return null;
-  }
-    const decodeToken = jwtDecode(token)
-    const userImage = decodeToken.imagen
-  
-    const handleLogout= () =>{
-      localStorage.removeItem('token');
-      navigate("/login")
-    }
+    };
 
     const closeMenu = () => setIsMenuOpen(false);
 
@@ -97,11 +99,12 @@ function Sidebaradmin() {
                   strokeWidth: 2,
                 })}
                 <Button
-                variant="text"
-                size="sm"
-                color="red"
-                className="w-full"
-                onClick={handleLogout}>
+                  variant="text"
+                  size="sm"
+                  color="red"
+                  className="w-full"
+                  onClick={handleLogout}
+                >
                   Log out
                 </Button>
               </MenuItem>
@@ -112,43 +115,9 @@ function Sidebaradmin() {
     );
   }
 
-  // nav list component
-  // const navListItems = [];
-
-  // function NavList() {
-  //   return (
-  //     <ul className="mb-4 mt-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center">
-  //       {navListItems.map(({ label, icon }) => (
-  //         <Typography
-  //           key={label}
-  //           as="a"
-  //           href="#"
-  //           variant="small"
-  //           color="gray"
-  //           className="font-medium text-blue-gray-500"
-  //         >
-  //           <MenuItem className="flex items-center gap-2 lg:rounded-full">
-  //             {React.createElement(icon, { className: "h-[18px] w-[18px]" })}{" "}
-  //             <span className="text-gray-900"> {label}</span>
-  //           </MenuItem>
-  //         </Typography>
-  //       ))}
-  //     </ul>
-  //   );
-  // }
-
-  // const [isNavOpen, setIsNavOpen] = useState(false);
-
-  // React.useEffect(() => {
-  //   window.addEventListener(
-  //     "resize",
-  //     () => window.innerWidth >= 960 && setIsNavOpen(false),
-  //   );
-  // }, []);
-  
   return (
     <>
-      <Navbar className="max-w-screen mx-auto p-2 lg:rounded-3xl lg:pl-3">
+      <Navbar className="max-w-screen-3xl mx-auto p-2  lg:pl-3">
         <div className="relative mx-auto flex items-center justify-between text-blue-gray-900">
           <IconButton variant="text" size="lg" onClick={openDrawer}>
             {isDrawerOpen ? (
@@ -175,16 +144,16 @@ function Sidebaradmin() {
           shadow={true}
           className="h-[calc(100vh-2rem)] w-full p-4"
         >
-            <div className="mb-2 flex items-center gap-4 p-4">
-              {/* <img
+          <div className="mb-2 flex items-center gap-4 p-4">
+            {/* <img
                 src=""
                 alt="brand"
                 className="h-8 w-8"
               /> */}
-              <Typography variant="h5" color="blue-gray">
-                TaskBoard
-              </Typography>
-            </div>
+            <Typography variant="h5" color="blue-gray">
+              TaskBoard
+            </Typography>
+          </div>
           <List>
             <ListItem>
               <ListItemPrefix>
@@ -199,7 +168,7 @@ function Sidebaradmin() {
                 <InboxIcon className="h-5 w-5" />
               </ListItemPrefix>
               <Link className="ml-2" to={"/roles"}>
-                Roles
+                Rols
               </Link>
             </ListItem>
           </List>

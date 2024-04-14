@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import ClienteAxios from "../../config/axios";
@@ -11,101 +11,85 @@ import {
   Typography,
   Input,
   IconButton,
+  Select,
+  Option
 } from "@material-tailwind/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css";
 
-function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
+function AddTask({ ID_Lista, handleCloseAdd, onTaskAdded }) {
   const [open, setOpen] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
+  const [task, saveTask] = useState({
+    Titulo: "",
+    Descripcion: "",
+    Prioridad: "",
+    Fechavencimiento: new Date(),
+  });
 
   const handleClose = () => {
     setOpen(false);
-    handleCloseEdit();
+    handleCloseAdd();
   };
-
+  
   const handleChange = (e, name) => {
     const value = e.target ? e.target.value : e;
-    setFormData({ ...formData, [name]: value });
+    saveTask({ ...task, [name]: value });
   };
-
-  useEffect(() => {
-    const fetchRolData = async () => {
-      try {
-        const response = await ClienteAxios.get(`/roles/${rolID}`);
-        const rolData = response.data;
-        setFormData({
-          Nombre: rolData.Nombre,
-        });
-      } catch (error) {
-        if (
-          error.response.data.error == "Token no encontrado" ||
-          error.response.data.error == "No tienes permisos"
-        ) {
-          navigate("/login");
-        }
-        console.error("Error al obtener datos del rol:", error);
-        setError("Looks like we have problems :(");
-      }
-    };
-
-    fetchRolData();
-  }, [rolID, navigate]);
-
-  const [formData, setFormData] = useState({
-    Nombre: "",
-  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     try {
-      const response = await ClienteAxios.patch(`/roles/${rolID}`, {
-        Nombre: formData.Nombre,
+      const response = await ClienteAxios.post("/tareas", {
+        ID_Lista: ID_Lista,
+        Titulo: task.Titulo,
+        Descripcion: task.Descripcion,
+        Prioridad: task.Prioridad,
+        Fechavencimiento: task.Fechavencimiento,
       });
       if (response.status === 201) {
-        setSuccessMessage("Role successfully edited!");
+        setSuccessMessage("Sucess!");
         setError("");
-        onRolEdited();
+        saveTask({
+          Titulo: "",
+          Descripcion: "",
+          Prioridad: "",
+          Fechavencimiento: new Date(),
+        });
+        onTaskAdded();
         setTimeout(() => {
           handleClose();
-          setFormData({
-            Nombre: "",
-          });
           setSuccessMessage("");
         }, 3500);
       }
     } catch (error) {
-      console.log(error.response.data.error);
       if (
-        error.response.data.error === "El nombre del rol ya existe" &&
-        error.response.status === 400
-      ) {
-        setError("Rol name already exists");
-      } else if (
         error.response.data.error == "Token no encontrado" ||
-        error.response.data.error == "No tienes permisos"
+        error.response.data.error == "Falta el encabezado de autorizacion"
       ) {
         navigate("/login");
       } else {
-        setError("Ooops..., Unexpected Server Error :(");
+        setError("Ooops...,Unexpected Server Error :(");
       }
       setTimeout(() => {
         setError("");
       }, 5000);
     }
   };
-
-  return (
+    return (
     <Fragment>
+
       <Dialog size="xs" open={open} className="bg-transparent shadow-none">
         <Card className="mx-auto w-full max-w-[24rem]">
           <form onSubmit={handleSubmit}>
             <CardBody className="flex flex-col gap-4">
               <div className="flex items-center justify-between space-x-4">
                 <Typography variant="h4" color="blue-gray">
-                  Edit Rol
+                  Create new task
                 </Typography>
                 <div className="flex items-center">
                   <IconButton variant="text" size="sm" onClick={handleClose}>
@@ -130,21 +114,59 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
                 Please enter information
               </Typography>
               <Typography className="" variant="h6">
-                Nombre
+                Tittle:
               </Typography>
               <Input
-                name="Nombre"
-                value={formData.Nombre}
-                onChange={(e) => handleChange(e, "Nombre")}
-                label="Nombre"
+                name="Titulo"
+                value={task.Titulo}
+                onChange={(e) => handleChange(e, "Titulo")}
+                label="Tittle"
                 required
+              />
+              <Typography className="" variant="h6">
+                Description:
+              </Typography>
+              <Input
+                name="Descripcion"
+                value={task.Descripcion}
+                onChange={(e) => handleChange(e, "Descripcion")}
+                label="Description"
+                required
+              />
+              <Typography className="" variant="h6">
+                Priority:
+              </Typography>
+              <Select
+                name="Prioridad"
+                value={task.Prioridad}
+                onChange={(e) => handleChange(e, "Prioridad")}
+                label="Priority"
+                required
+              >
+                <Option value="Alto">High</Option>
+                <Option value="Normal">Normal</Option>
+                <Option value="Bajo">Low</Option>
+              </Select>
+              <Typography className="" variant="h6">
+              Expiration date:
+              </Typography>
+              <DatePicker
+                selected={task.Fechavencimiento}
+                showIcon
+                minDate={Date.now()}
+                dateFormat="YYYY-MM-dd"
+                onChange={(date) =>
+                  handleChange(date, "Fechavencimiento")
+                }
+                
+               
               />
             </CardBody>
             <CardFooter className="pt-0">
               {error && <span className="text-red-500">{error}</span>}
               <div className="mt-2 flex flex-col">
                 <Button variant="gradient" type="submit" fullWidth>
-                  Edit rol
+                  Create Task
                 </Button>
               </div>
             </CardFooter>
@@ -154,9 +176,9 @@ function EditRol({ rolID, handleCloseEdit, onRolEdited }) {
     </Fragment>
   );
 }
-EditRol.propTypes = {
-  rolID: PropTypes.number.isRequired,
-  handleCloseEdit: PropTypes.func.isRequired,
-  onRolEdited: PropTypes.func.isRequired,
+AddTask.propTypes = {
+  ID_Lista: PropTypes.number.isRequired,
+  handleCloseAdd: PropTypes.func.isRequired,
+  onTaskAdded: PropTypes.func.isRequired
 };
-export default EditRol;
+export default AddTask;

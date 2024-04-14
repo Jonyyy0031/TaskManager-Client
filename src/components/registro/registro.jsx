@@ -1,199 +1,205 @@
-// eslint-disable-next-line no-unused-vars
-import React, { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ClienteAxios from "../../config/axios";
 import { Link } from "react-router-dom";
+import { UserCircleIcon } from "@heroicons/react/24/outline";
 
 function Registro() {
-  const [formData, setFormData] = useState({
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [img, setImg] = useState(null);
+  const [imgTemp, setImgtemp] = useState(null);
+  const navigate = useNavigate();
+
+  const [user, saveUser] = useState({
     username: "",
     email: "",
     password: "",
     confirmpassword: "",
+    imagen: "",
   });
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const history = useNavigate();
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleChange = (e, name) => {
+    const value = e.target ? e.target.value : e;
+    saveUser({ ...user, [name]: value });
   };
 
+  const handleImageChange = (e) => {
+    if (e.target.files[0]) {
+      setImg(e.target.files[0]);
+      setImgtemp(URL.createObjectURL(e.target.files[0]));
+    }
+    console.log(e.target.files);
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmpassword) {
-      setError("Las contraseñas no coinciden");
+    if (user.password !== user.confirmpassword) {
+      setError("Password doesn't match");
       return;
     }
 
+    if (!img) {
+      setError("Please, select an image");
+      return;
+    }
+
+    const form = new FormData();
+    form.append("username", user.username);
+    form.append("email", user.email);
+    form.append("password", user.password);
+    form.append("file", img);
+
     try {
-      const response = await ClienteAxios.post("/register", {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      });
+      const response = await ClienteAxios.post("/register", form);
       if (response.status === 201) {
-        setSuccessMessage("Usuario creado correctamente");
+        setSuccessMessage("Done!");
         setError("");
-        setFormData({
+        saveUser({
           username: "",
           email: "",
           password: "",
           confirmPassword: "",
+          imagen: "",
         });
         setTimeout(() => {
           setSuccessMessage("");
-          history("/login");
+          navigate("/login");
         }, 3000);
       }
     } catch (error) {
-      if (error.response && error.response.status === 400) {
-        setError("El nombre de usuario ya está en uso");
-      }
       if (
+        error.response.data.error === "El nombre de usuario ya esta en uso" &&
+        error.response.status === 400
+      ) {
+        setError("Username already exists");
+      } else if (
         error.response.data.error === "El correo electronico ya esta en uso" &&
         error.response.status === 400
       ) {
-        setError("El correo electronico ya esta en uso");
+        setError("Email already exists");
       } else {
         setError(
-          "Error en el servidor. Por favor, inténtalo de nuevo más tarde."
+          "Somethin went wrong :/",
         );
+        console.log(error);
       }
+      setTimeout(() => {
+        setError("");
+      }, 3000);
     }
   };
 
   return (
     <Fragment>
-      <section className="bg-white">
-        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-          <a
-            href="#"
-            className="flex items-center mb-6 text-2xl font-semibold text-gray-700 dark:text-black"
-          >
-            <img
-              className="w-8 h-8 mr-2"
+      <section className="b h-full w-full">
+        <div className="mx-auto flex flex-col items-center justify-center px-6 py-8 md:h-screen lg:py-0">
+          <a className="mb-6 flex items-center text-2xl font-semibold text-gray-700 dark:text-black">
+            {/* <img
+              className="mr-2 h-8 w-8"
               src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg"
               alt="logo"
-            ></img>
+            ></img> */}
             Taskmanager
           </a>
-          <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-100 dark:border-gray-700">
-            <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-              {successMessage && ( // Mostrar mensaje de éxito si está definido
+          <div className="w-full rounded-lg bg-white border border-black shadow sm:max-w-md md:mt-0 xl:p-0">
+            <div className="space-y-4 p-6 sm:p-8 md:space-y-6">
+              {successMessage && (
                 <div
-                  className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-4"
+                  className="relative mt-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
                   role="alert"
                 >
-                  <strong className="font-bold">Éxito!</strong>
                   <span className="block sm:inline"> {successMessage}</span>
                 </div>
               )}
-              <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-black">
+              <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 dark:text-black md:text-2xl">
                 Create an account
               </h1>
               <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
+                <div className="relative mx-auto h-24 w-24 animate-pulse rounded-full bg-gray-300">
+                  <div className="relative grid h-24 w-24 place-items-center rounded-full bg-gray-300">
+                    {img ? (
+                      <img
+                        src={imgTemp}
+                        alt="user-avatar"
+                        className="absolute left-0 top-0 h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <UserCircleIcon className="absolute left-1/2 top-1/2 h-[64px] w-[64px] -translate-x-1/2 -translate-y-1/2 transform" />
+                    )}
+                    <label className="absolute left-0 top-0 h-full w-full cursor-pointer">
+                      <input
+                        type="file"
+                        name="imagen"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                  </div>
+                </div>
                 <div>
-                  <label
-                    htmlFor="username"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-black"
-                  >
+                  <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-black">
                     Your username
                   </label>
                   <input
                     type="text"
                     name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    className="bg-whtie border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:border-black dark:placeholder-black-50 dark:text-black"
+                    value={user.username}
+                    onChange={(e) => handleChange(e, "username")}
+                    className="bg-whtie focus:ring-primary-600 focus:border-primary-600 dark:placeholder-black-50 block w-full rounded-lg border p-2.5 dark:border-black dark:text-black sm:text-sm"
                     placeholder="Example123"
                     required
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-black"
-                  >
+                  <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-black">
                     Your email
                   </label>
                   <input
                     type="email"
                     name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="bg-whtie border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:border-black dark:placeholder-black-50 dark:text-black"
+                    value={user.email}
+                    onChange={(e) => handleChange(e, "email")}
+                    className="bg-whtie focus:ring-primary-600 focus:border-primary-600 dark:placeholder-black-50 block w-full rounded-lg border p-2.5 dark:border-black dark:text-black sm:text-sm"
                     placeholder="example@gmail.com"
                     required
                   />
                 </div>
                 <div className="flex space-x-4">
                   <div className="w-1/2">
-                    <label
-                      htmlFor="password"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-black"
-                    >
+                    <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-black">
                       Password
                     </label>
                     <input
                       type="password"
                       name="password"
-                      value={formData.password}
-                      onChange={handleChange}
+                      value={user.password}
+                      onChange={(e) => handleChange(e, "password")}
                       placeholder="••••••••"
-                      className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:border-black dark:placeholder-black-50 dark:text-black"
+                      className="focus:ring-primary-600 focus:border-primary-600 dark:placeholder-black-50 block w-full rounded-lg border bg-white p-2.5 dark:border-black dark:text-black sm:text-sm"
                       required
                     />
                   </div>
                   <div className="w-1/2">
-                    <label
-                      htmlFor="confirmpassword"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-black"
-                    >
+                    <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-black">
                       Confirm password
                     </label>
                     <input
                       type="password"
                       name="confirmpassword"
-                      value={formData.confirmpassword}
-                      onChange={handleChange}
+                      value={user.confirmpassword}
+                      onChange={(e) => handleChange(e, "confirmpassword")}
                       placeholder="••••••••"
-                      className="bg-white border sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:border-black dark:placeholder-black-50 dark:text-black"
+                      className="focus:ring-primary-600 focus:border-primary-600 dark:placeholder-black-50 block w-full rounded-lg border bg-white p-2.5 dark:border-black dark:text-black sm:text-sm"
                       required
                     />
                   </div>
                 </div>
-
-                {/* <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="terms"
-                      aria-describedby="terms"
-                      type="checkbox"
-                      className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
-                      required=""
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label
-                      htmlFor="terms"
-                      className="font-light text-gray-500 dark:text-black"
-                    >
-                      I accept the{" "}
-                      <a
-                        className="font-medium text-primary-600 hover:underline dark:text-black"
-                        href="#"
-                      >
-                        Terms and Conditions
-                      </a>
-                    </label>
-                  </div>
-                </div> */}
                 {error && <span className="text-red-500">{error}</span>}
                 <div className="flex flex-col">
                   <button
                     type="submit"
-                    className="flex w-full border border-black items-center justify-center active:scale-[.98] active:duration-75 transition-all hover:scale-[1.01] font-bold  rounded-xl bg-orange-500  p-3 text-sm  leading-6 text-white shadow-sm hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    className="flex w-full items-center justify-center rounded-xl border border-black bg-gray-600 p-3 text-sm font-bold  leading-6 text-white  shadow-sm transition-all  hover:scale-[1.01] hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 active:scale-[.98] active:duration-75"
                   >
                     Create an account
                   </button>
@@ -202,7 +208,7 @@ function Registro() {
                   Already have an account?{" "}
                   <Link
                     to={"/login"}
-                    className="font-medium text-primary-600 hover:underline dark:text-orange-500 underline"
+                    className="font-medium text-blue-500 underline hover:underline"
                   >
                     Login here
                   </Link>
