@@ -1,7 +1,7 @@
 import { Fragment, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import Nav from "../layout/Nav";
+import NavUser from "../layout/NavUser.jsx";
 import Footer from "../layout/Footer";
 import ClienteAxios from "../../config/axios";
 import {
@@ -209,6 +209,7 @@ function Home() {
 
   return (
     <Fragment>
+      <NavUser />
       {addListMode && (
         <AddList
           ID_Usuario={IDUser}
@@ -238,7 +239,6 @@ function Home() {
         />
       )}
       <div className="min-h-screen bg-gray-100">
-        <Nav />
         <div className="px-* mb-8 mt-4 flex flex-col items-center justify-center">
           {listas.map((lista) => (
             <Card

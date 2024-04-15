@@ -33,7 +33,7 @@ function Login() {
           console.log(response.data.data.ID_Rol)
           if (response.data.data.ID_Rol === 1) {
             navigate("/homea");
-          } else if (response.data.data.ID_Rol === 1006) {
+          } else if (response.data.data.ID_Rol === 2) {
             navigate("/home");
           } else {
             console.log(error)
